@@ -12,6 +12,11 @@ breaks, it debugs one variable at a time — and it can cleanly remove everythin
 > 🌐 **Start here: [the project page](https://thunderruler.github.io/dlss5-installer-skill/)** —
 > it has the copy-paste prompt and a plain-English explanation.
 
+> **Never done this before?**
+> [`references/first-run.md`](references/first-run.md) walks through what actually happens on a
+> machine with none of this installed — what you supply, what the assistant handles, and how long
+> it takes.
+
 ## Quick start
 
 ### Option 1 — paste this into Claude (or your LLM of choice)
@@ -77,6 +82,7 @@ Nothing is sent without your say-so, and no NVIDIA DLLs are ever attached or lin
 ```
 SKILL.md                     the procedure the LLM follows (the skill itself)
 references/
+  first-run.md               starting from nothing: what happens, in order, and how long
   components.md              every tool in the ecosystem and where to get it
   decision-tree.md           picking the right stack from the game's API + bitness
   install-playbook.md        exact file layouts for scenarios A/B/C/D

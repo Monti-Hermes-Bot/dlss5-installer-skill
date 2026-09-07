@@ -24,6 +24,7 @@ from the same location, e.g.
 
 | Reference | Read it when |
 |---|---|
+| `references/first-run.md` | The user is starting from nothing, or asks what the whole process involves before committing |
 | `references/components.md` | You need to know what a tool is, where it comes from, or its exact requirements |
 | `references/decision-tree.md` | Determining a game's API/bitness and picking Scenario A/B/C/D |
 | `references/install-playbook.md` | Doing the actual install — exact file layout per scenario |
@@ -158,7 +159,7 @@ The user needs four things you cannot ship. Locate each before promising anythin
    source. Required even for games with no DLSS of their own.
 
 Scenario C additionally needs `dlss5-feed.addon64` + `DLSS5_Feed.fx` — take the
-**latest** DLSS5-Feeder release (v0.4.0 at time of writing) and always deploy the addon
+**latest** DLSS5-Feeder release (v0.6.0-beta.1 at time of writing) and always deploy the addon
 and shader from the **same release** as a matched pair — and iMMERSE LaunchPad (`MartysMods_LAUNCHPAD.fx`, the `MartysMods\` folder,
 `iMMERSE_bluenoise_opt.png`) — sources in `references/components.md`.
 
