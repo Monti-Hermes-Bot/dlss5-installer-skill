@@ -66,8 +66,8 @@ The GPU decides **which runtime build** the user needs (`references/known-hashes
 Driver: **616.56 minimum**. On **616.64 or newer** (every current Game Ready driver) the
 RenoDX DLSS5 addon's **v4.6/v4.7 ("lazy-adoption") builds fault inside the runtime** —
 the most common reason an install that worked in August "just stopped working". Classic
-builds (v4.1.5, v4.55) still work; v5.x is untested. For a **new** install recommend v6.1
-or newer; for an existing one, check the log before upgrading.
+v4.1.5 also **degrades** there (NR on ~1 frame/sec, no error line — see Death Stranding in
+`references/game-results.md`). **Use v6.1 or newer on any driver ≥ 616.64.**
 
 ### Gate 2: Anti-cheat and multiplayer
 
@@ -277,6 +277,11 @@ inline feature 18 evaluation succeeded (...)                <- A/B (ReShade.log)
 neural model (feature 18) loaded                            <- C/D with the OptiScaler consumer
 OptiScaler ... loaded + the model initialising, NR shown in the Insert menu      <- E
 ```
+
+**The first success line is not enough.** The RenoDX addon logs milestone counts
+(`count=1`, `60`, `600`, …): confirm the later milestones arrive at roughly the game's
+frame rate. `count=1` → `60` taking a minute means NR is only landing on occasional frames
+— the user sees flicker and partial coverage while the log looks clean.
 
 For C/D also confirm line 1 of `dlss5-feed.log` names the Feeder version you deployed, and
 `MV probe … N% non-zero` is not 0% while the camera moves. `feature 18 create failed with

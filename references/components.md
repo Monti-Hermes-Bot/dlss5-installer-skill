@@ -57,8 +57,8 @@ Minimum **616.56**. On **616.64 and newer** (i.e. any current driver) the RenoDX
 addon's **v4.6 and v4.7 ("lazy-adoption engine") builds fault** inside
 `nvngx_dlssnr.dll` (Feeder issue #54). Per the Feeder's own `--test` table: classic-engine
 v4.55 passes on 616.64; v6.1.0, v7.0.0-rc8 and v8.0.1 pass on 617.14; v5.x was never
-tested. This project re-verified classic **v4.1.5** in a real game (Death Stranding DC) on
-616.92. **Recommend v6.1 or newer.** (6.1.0 and 8.0.1 aren't on rhi-repo; 6.4.1+, 7.0.0-rc8
+tested. In a real game (Death Stranding DC, 616.92) classic **v4.1.5** also degraded —
+NR on ~1 frame/sec, no error. **Use v6.1 or newer.** (6.1.0 and 8.0.1 aren't on rhi-repo; 6.4.1+, 7.0.0-rc8
 and 8.5.0-rc10 are.) Staying on 616.56 is the other workaround.
 
 ## Neural consumers (pick exactly one)

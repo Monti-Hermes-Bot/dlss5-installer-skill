@@ -28,7 +28,7 @@ Judged on this machine so far:
 
 | Game | Look | Verdict |
 |---|---|---|
-| Death Stranding DC | photoreal | ✅ the reference case - clearly better |
+| Death Stranding DC | photoreal | ✅ the reference case - clearly better (on driver 616.56; see the 2026-09-29 flicker note below) |
 | Journey | stylized, flat, painterly | ❌ no benefit |
 | INSIDE | stylized, minimal, silhouette-driven | ❌ no benefit |
 | Subnautica | stylized | ❌ no benefit |
@@ -163,7 +163,7 @@ STANDBY/FAILED if not replaced.
 
 Installed cleanly and ran; user judged the result not worth keeping. Removed.
 
-### Death Stranding Director's Cut — ✅ working
+### Death Stranding Director's Cut — ✅ worked 2026-08-30 · ⚠️ visible flicker on driver 616.92 (open)
 `C:\Program Files (x86)\Steam\steamapps\common\DEATH STRANDING DIRECTORS CUT` · `ds.exe` · Steam 1850570
 **D3D12, 64-bit, native DLSS (Streamline)** → Scenario A, `renodx-dlss5.addon64` alone.
 
@@ -198,23 +198,30 @@ Notes:
   the game is D3D12 with native DLSS. Harmless; the Feeder just logs a missing-shader warning.
 - DLSSTweaks is present but **not loading** (Streamline bypasses it). Ignore its settings.
 
-**Re-verified 2026-09-29 on driver 616.92** (i.e. past the 616.64 change that breaks the
-v4.6/v4.7 addons) — same RTX 5070 Ti, same **unchanged v4.1.5** classic addon, same pinned
-runtime. Minimal Scenario A layout only: `dxgi.dll`, `renodx-dlss5.addon64`,
-`nvngx_dlssnr.dll`, `reshade.ini` (no bridge, no Feeder).
-```
-Initializing crosire's ReShade version '6.8.0.2155' (64-bit) loaded from '...\dxgi.dll' into '...\ds.exe'
-Redirecting D3D12CreateDevice(...)
-RenoDX DLSS5 Generic v4.1.5 (build Aug 29 2026 15:54:01) loaded
-signed runtime sha256 E16BCF15...1FC8E (reference match)
-signed DLSSNR 310.8.0 D3D12 runtime initialized
-feature 18 created via the NGX core after DLSS/DLAA for NR input 1920x1080 -> output 1920x1080 with guides 1920x1080
-inline feature 18 evaluation succeeded (count=1, NR input 1920x1080 (guides 1920x1080), output 1920x1080 [native])
-```
-Only ERROR line: the benign `Failed to find NVSDK_NGX_D3D12_EvaluateFeature_C`. So the
-616.64+ breakage is specific to the lazy-adoption builds — **a classic-engine v4.1.5 still
-works**, at least in this game on this card. One data point, not a guarantee for other
-pre-v6 builds.
+**Re-tested 2026-09-29 on driver 616.92 — a cautionary case.** Same RTX 5070 Ti, same
+pinned runtime (`reference match`), minimal Scenario A layout (`dxgi.dll`,
+`renodx-dlss5.addon64`, `nvngx_dlssnr.dll`, `reshade.ini`), 1920x1080 windowed, DLAA
+(guides match output — this is **not** the old partial-frame bug).
+
+1. **Unchanged classic v4.1.5 addon:** the log looked healthy — `feature 18 created`,
+   `inline feature 18 evaluation succeeded (count=1 …)`, runtime reference match, only the
+   benign `EvaluateFeature_C` ERROR. It was **not** healthy. The addon logs milestone
+   counts only, and `count=1` → `count=60` took **68 s**, versus **3 s** for the same game
+   and addon on driver 616.56 in August: NR was succeeding on roughly one frame per second.
+   In game: **flicker, and NR visible on only part of the image.** So the 616.64+ driver
+   problem is **not** limited to the v4.6/v4.7 builds — classic v4.1.5 degrades too, just
+   without an error line.
+2. **Upgraded to v7.0.0-rc8** (rhi-repo, zip digest `c0821162…70639`; it migrated the
+   v4 `reshade.ini` itself and backed it up): per-frame rate restored — `count=1` → `60`
+   in 0.7 s → `600` in 5.5 s (~100 fps), same 1920x1080 geometry, no errors.
+   **But the user still sees the same flicker and partial coverage.** Unresolved.
+
+Not yet ruled out (change one per launch): the hand-tuned `[RenoDX.DLSS5]` values carried
+over from August — `NRMVecScaleX=-1.237`, `NRMVecScaleY=-1.276`, `NRIntensity=2`,
+`NRPaperWhiteScale=7.277`, `NRAutoMask=1` — reset to defaults first; then the game's own
+DLSS (`nvidia_dlss_quality 3` with an NVIDIA App DLAA override) vs. native DLAA; then
+v8.x's `NRHookPoint`. Lesson for everyone: **`count=1` is not proof — check that the
+milestone counts arrive at frame rate.**
 
 ### INSIDE - WORKING (Feeder / Scenario C) 2026-08-30
 `D:\SteamLibrary\steamapps\common\INSIDE` · `INSIDE.exe` · Unity, **D3D11 64-bit, no DLSS**

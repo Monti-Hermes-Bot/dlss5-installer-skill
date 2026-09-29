@@ -45,10 +45,10 @@ Ranked by likelihood:
 
 1b. **Old consumer on a new driver.** Driver **616.64+** with `renodx-dlss5` **v4.6 or
    v4.7** (the "lazy-adoption" builds) faults inside `nvngx_dlssnr.dll` (Feeder issue #54):
-   the evaluate crashes or returns nothing. Classic builds survive — v4.55 passes the
-   Feeder's test and v4.1.5 was re-verified in Death Stranding DC on 616.92 — while v5.x is
-   untested. **Don't upgrade a working classic addon just because the driver changed:
-   launch and read the log first.** Check the addon version (RHI: `%LOCALAPPDATA%\RHI\rdx5\version.txt`;
+   the evaluate crashes or returns nothing. Classic v4.55 passes the Feeder's test, but
+   classic **v4.1.5 degraded silently** in Death Stranding DC on 616.92 (NR on ~1
+   frame/sec — see "Flicker" below); v5.x is untested. Check the addon version (RHI:
+   `%LOCALAPPDATA%\RHI\rdx5\version.txt`;
    the load banner in `ReShade.log`). Upgrade to v6.1+ — this silently breaks installs that
    worked in August as soon as the user takes a Game Ready driver.
 
@@ -120,6 +120,27 @@ fullscreen swapchain churn causing repeated effect reloads.
   game created its DLSS feature before hooks were installed. It recovers.
 - `Ignoring LoadLibrary('...') call to avoid possible deadlock` — normal ReShade behaviour.
 - `warning X4000: use of potentially uninitialized variable` in SweetFX shaders — cosmetic.
+
+### Flicker, or NR on only part of the image, while the log says "succeeded"
+
+Not the guide/colour mismatch above if `guides` equals the output size. Check the
+**evaluation rate**: the RenoDX addon logs milestone counts only (`count=1`, `60`, `600`…).
+
+```powershell
+Select-String ReShade.log -Pattern 'evaluation succeeded \(count=' | % { $_.Line.Substring(0,60) }
+```
+
+- Milestones arrive at frame rate (`1` → `60` in about a second) → NR runs every frame;
+  look elsewhere (below).
+- `1` → `60` takes tens of seconds → NR is landing on occasional frames only, which the
+  eye sees as flicker and partial coverage. Seen with classic v4.1.5 on driver 616.92.
+  Fix: addon **v6.1+** (v7.0.0-rc8 restored the full rate in the same game).
+
+If the rate is fine and it still flickers (Death Stranding DC, 2026-09-29 — open), suspects
+in order, one per launch: hand-tuned `[RenoDX.DLSS5]` values (especially non-default
+`NRMVecScaleX/Y`, which mis-scale the motion vectors the model reprojects with, and
+`NRAutoMask`) — reset to defaults; then the game's DLSS mode vs. forced DLAA; then the
+hook point (`NRHookPoint`, v8).
 
 ## Warnings that matter
 
