@@ -66,7 +66,8 @@ The GPU decides **which runtime build** the user needs (`references/known-hashes
 Driver: **616.56 minimum**. On **616.64 or newer** (every current Game Ready driver) the
 RenoDX DLSS5 addon's **v4.6/v4.7 ("lazy-adoption") builds fault inside the runtime** —
 the most common reason an install that worked in August "just stopped working". Classic
-v4.55 still passes; v5.x is untested. **Recommend v6.1 or newer.**
+builds (v4.1.5, v4.55) still work; v5.x is untested. For a **new** install recommend v6.1
+or newer; for an existing one, check the log before upgrading.
 
 ### Gate 2: Anti-cheat and multiplayer
 

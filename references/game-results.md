@@ -198,6 +198,24 @@ Notes:
   the game is D3D12 with native DLSS. Harmless; the Feeder just logs a missing-shader warning.
 - DLSSTweaks is present but **not loading** (Streamline bypasses it). Ignore its settings.
 
+**Re-verified 2026-09-29 on driver 616.92** (i.e. past the 616.64 change that breaks the
+v4.6/v4.7 addons) — same RTX 5070 Ti, same **unchanged v4.1.5** classic addon, same pinned
+runtime. Minimal Scenario A layout only: `dxgi.dll`, `renodx-dlss5.addon64`,
+`nvngx_dlssnr.dll`, `reshade.ini` (no bridge, no Feeder).
+```
+Initializing crosire's ReShade version '6.8.0.2155' (64-bit) loaded from '...\dxgi.dll' into '...\ds.exe'
+Redirecting D3D12CreateDevice(...)
+RenoDX DLSS5 Generic v4.1.5 (build Aug 29 2026 15:54:01) loaded
+signed runtime sha256 E16BCF15...1FC8E (reference match)
+signed DLSSNR 310.8.0 D3D12 runtime initialized
+feature 18 created via the NGX core after DLSS/DLAA for NR input 1920x1080 -> output 1920x1080 with guides 1920x1080
+inline feature 18 evaluation succeeded (count=1, NR input 1920x1080 (guides 1920x1080), output 1920x1080 [native])
+```
+Only ERROR line: the benign `Failed to find NVSDK_NGX_D3D12_EvaluateFeature_C`. So the
+616.64+ breakage is specific to the lazy-adoption builds — **a classic-engine v4.1.5 still
+works**, at least in this game on this card. One data point, not a guarantee for other
+pre-v6 builds.
+
 ### INSIDE - WORKING (Feeder / Scenario C) 2026-08-30
 `D:\SteamLibrary\steamapps\common\INSIDE` · `INSIDE.exe` · Unity, **D3D11 64-bit, no DLSS**
 

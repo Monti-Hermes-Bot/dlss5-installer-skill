@@ -45,7 +45,10 @@ Ranked by likelihood:
 
 1b. **Old consumer on a new driver.** Driver **616.64+** with `renodx-dlss5` **v4.6 or
    v4.7** (the "lazy-adoption" builds) faults inside `nvngx_dlssnr.dll` (Feeder issue #54):
-   the evaluate crashes or returns nothing. Classic v4.55 passes; v5.x is untested. Check the addon version (RHI: `%LOCALAPPDATA%\RHI\rdx5\version.txt`;
+   the evaluate crashes or returns nothing. Classic builds survive — v4.55 passes the
+   Feeder's test and v4.1.5 was re-verified in Death Stranding DC on 616.92 — while v5.x is
+   untested. **Don't upgrade a working classic addon just because the driver changed:
+   launch and read the log first.** Check the addon version (RHI: `%LOCALAPPDATA%\RHI\rdx5\version.txt`;
    the load banner in `ReShade.log`). Upgrade to v6.1+ — this silently breaks installs that
    worked in August as soon as the user takes a Game Ready driver.
 
