@@ -50,10 +50,11 @@ straight from this repo, so it never goes stale.
 
 | Requirement | Why |
 |---|---|
-| **NVIDIA RTX GPU** — 50-series + driver 616.56+ is the documented config | 40/30-series reportedly works too, but is undocumented here so far — if you get it working, [tell us](https://github.com/ThunderRuler/dlss5-installer-skill/issues/new/choose)! |
+| **NVIDIA RTX GPU** — 50-series + a current driver is the documented config | RTX 20/30/40 work with a community-modified runtime the skill verifies by hash — slower, and not yet documented here, so [tell us](https://github.com/ThunderRuler/dlss5-installer-skill/issues/new/choose) how it goes! |
 | Windows + Steam/GOG/Epic games | Game Pass installs are locked and can't be modded this way |
 | A game **without anti-cheat** | The skill scans and hard-refuses anti-cheat titles — injecting DLLs gets you banned. For multiplayer games with none found, it stops and asks you to verify first |
-| DirectX 9/11/12 or Vulkan | Only **DirectX 10** has no path at all |
+| DirectX 9/10/11/12, Vulkan or OpenGL | Almost everything has a path now — only 64-bit DirectX 10 (beta route, untested) and 32-bit DirectX 12 don't |
+| Not already officially supported | NVIDIA shipped DLSS 5 on 2026-09-03 (NBA 2K27 first). If your game has a "DLSS Neural Rendering" setting, use that instead |
 
 ## How the community loop works
 
@@ -72,8 +73,8 @@ you about fifteen seconds. That includes the boring outcomes:
 - **"It installed fine and looked identical"** is one of the most valuable reports there
   is. Nobody files these, so everyone keeps rediscovering the same dead ends.
 - **A failure with a known cause** saves someone an entire evening.
-- **A 40- or 30-series success** would be the first documented one, and yours would become
-  the reference.
+- **An RTX 20/30/40 result** would be the first documented one here, and yours would
+  become the reference.
 
 Nothing is sent without your say-so, and no NVIDIA DLLs are ever attached or linked.
 
@@ -108,22 +109,27 @@ next person an evening. Please include the proof line from your log rather than 
 "it worked" — that's what makes the table trustworthy.
 
 Two things that get declined, and they're why this project can exist publicly: **no
-binaries** (above all `nvngx_dlssnr.dll`) and **no links to runtime downloads**.
+binaries** (above all `nvngx_dlssnr.dll`) and **no new links to runtime downloads** (the only
+source named is the hash-pinned rhi-repo release used by RHI itself).
 
 ## Credits & provenance
 
 This skill orchestrates other people's excellent work:
 [RenoDX](https://github.com/clshortfuse/renodx) (clshortfuse),
 [DLSS5-Feeder](https://github.com/jlrouzies-fr/DLSS5-Feeder) (jlrouzies-fr),
-[dlss5-dx11-bridge](https://github.com/NIGos/dlss5-dx11-bridge) (NIGos),
+[dlss5-bridge](https://github.com/NIGos/dlss5-bridge) (NIGos),
+[OptiScaler DLSS-NR](https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass) (wilsjo2, on Dagherbou's OptiScaler_DLSSNR),
+[LumeniteFX](https://github.com/umar-afzaal/LumeniteFX) (umar-afzaal),
 [iMMERSE LaunchPad](https://github.com/martymcmodding/iMMERSE) (Marty McFly),
 [ReShade](https://reshade.me) (crosire), and
 [RHI](https://github.com/RankFTW/RHI) (RankFTW).
 
 **No NVIDIA binaries are included in this repo, ever.** The `nvngx_dlssnr.dll` runtime is
-unreleased NVIDIA code that leaked from a game's early-access build. The skill only
-locates and verifies copies already present on your machine — it never downloads the DLL
-and instructs the assistant to refuse tampered (`HashMismatch`) copies.
+NVIDIA code that was never released standalone (the signed build leaked from a game's
+early-access build; the RTX 20/30/40 build is a community modification of it). The skill
+accepts a copy only if its SHA-256 matches a short pinned list — preferring one already on
+your machine, otherwise fetching the named build from RHI's release repo after asking you
+— and refuses anything else.
 
 Use at your own risk. Modding game files can break games; Steam's *Verify integrity of
 game files* restores them.

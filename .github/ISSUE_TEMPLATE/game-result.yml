@@ -38,9 +38,10 @@ body:
       description: The skill tells you this during triage. Pick "Not sure" if you don't know.
       options:
         - "A — D3D12 + native DLSS (renodx-dlss5 alone)"
-        - "B — D3D11 + DLSS (+ dlss5-dx11-bridge)"
+        - "B — D3D11 or Vulkan + DLSS (+ dlss5-bridge)"
         - "C — no DLSS (+ DLSS5-Feeder)"
-        - "D — 32-bit D3D11 (Feeder + host64)"
+        - "D — 32-bit game (Feeder + host64)"
+        - "E — OptiScaler DLSS-NR fork (no ReShade)"
         - "Not sure"
     validations:
       required: true
@@ -70,7 +71,7 @@ body:
     id: gpu
     attributes:
       label: GPU and driver
-      placeholder: "RTX 5070 Ti, driver 616.56"
+      placeholder: "RTX 5070 Ti, driver 616.92 — runtime SHA-256 first 8: E16BCF15"
 
   - type: textarea
     id: notes

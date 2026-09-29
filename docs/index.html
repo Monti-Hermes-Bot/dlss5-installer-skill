@@ -101,12 +101,14 @@
     This works by injecting DLLs into the game &mdash; exactly what anti-cheat looks for. The skill scans for anti-cheat and refuses those games even if you ask. Bans are often permanent and hardware-level.</div>
   <div class="dangerbox"><b>Multiplayer without anti-cheat? You verify, then confirm.</b>
     A file scan can't see anti-cheat enforced server-side, added in a later update, or required by a particular server. If your game has any online play, the skill stops and asks you to double-check before it installs anything.</div>
+  <div class="warnbox"><b>Check for official DLSS 5 first.</b>
+    NVIDIA released DLSS 5 on 3 September 2026 (driver 616.64, RTX 50), starting with NBA 2K27. If your game has a &ldquo;DLSS Neural Rendering&rdquo; setting, use that &mdash; no mod needed.</div>
   <div class="warnbox"><b>RTX 50-series is the documented config.</b>
-    40- and 30-series reportedly work too but aren't documented here yet &mdash; if you get one working, report it and yours becomes the reference.</div>
+    RTX 20/30/40 work with a community-modified runtime build that the skill accepts only by its exact SHA-256 &mdash; expect a big performance hit. None documented here yet; if you get one working, report it and yours becomes the reference.</div>
   <div class="warnbox"><b>Games without DLSS are hit and miss.</b>
     For those the motion vectors have to be reconstructed from the image, which works well in slower scenes but struggles with fast motion, repetitive texture and spinning objects &mdash; a driving sim at speed is close to the worst case. Games that already have DLSS use real engine data and look far better.</div>
-  <div class="warnbox"><b>This uses a leaked, unreleased NVIDIA runtime.</b>
-    The community tools around it are legitimate open source, but <code>nvngx_dlssnr.dll</code> leaked from a game build. This repo never distributes it — the skill only finds and hash-verifies copies already on your machine, and rejects the corrupt copy that's floating around.</div>
+  <div class="warnbox"><b>This uses an unofficial NVIDIA runtime.</b>
+    The community tools around it are open source, but <code>nvngx_dlssnr.dll</code> leaked from a game build (and the RTX 20/30/40 version is a modification of it). This repo never distributes it &mdash; the skill accepts a copy only if its SHA-256 matches a short pinned list, prefers one already on your machine, and asks before fetching the named build from RHI's release repo. Fake installer sites exist; the skill steers you to the real release pages.</div>
 </section>
 
 <section>
@@ -114,12 +116,14 @@
   <table>
     <tr><th>Game type</th><th>Verdict</th></tr>
     <tr><td>64-bit DirectX 12, has DLSS</td><td class="ok">✔ simplest case — one addon</td></tr>
-    <tr><td>64-bit DirectX 11, has DLSS</td><td class="ok">✔ via the DX11 bridge</td></tr>
+    <tr><td>64-bit DirectX 12, has DLSS &mdash; lower cost</td><td class="ok">✔ OptiScaler DLSS-NR fork (runs the model before upscaling)</td></tr>
+    <tr><td>64-bit DirectX 11 or Vulkan, has DLSS</td><td class="ok">✔ via the dlss5-bridge</td></tr>
     <tr><td>64-bit DX11/DX12, <i>no</i> DLSS at all</td><td class="ok">✔ via DLSS5-Feeder (motion vectors are synthesized)</td></tr>
-    <tr><td>32-bit DirectX 11</td><td class="ok">✔ beta, via a 64-bit helper process</td></tr>
-    <tr><td><b>Vulkan</b></td><td class="ok">✔ works out of the box (ReShade installs as a layer)</td></tr>
-    <tr><td><b>DirectX 9</b></td><td class="ok">✔ via a dgVoodoo2 D3D9→D3D11 wrapper</td></tr>
-    <tr><td>DirectX 10</td><td class="no">✘ the only hard dead end</td></tr>
+    <tr><td>32-bit DirectX 11 / OpenGL / Vulkan</td><td class="ok">✔ via a 64-bit helper process</td></tr>
+    <tr><td><b>Vulkan</b> or <b>OpenGL</b>, no DLSS</td><td class="ok">✔ via DLSS5-Feeder</td></tr>
+    <tr><td><b>32-bit DirectX 10</b></td><td class="ok">✔ via DLSS5-Feeder (new)</td></tr>
+    <tr><td><b>DirectX 9</b></td><td class="ok">✔ via a dgVoodoo2 (or DXVK) wrapper</td></tr>
+    <tr><td>64-bit DirectX 10 &middot; 32-bit DirectX 12</td><td class="no">✘ no working path yet (64-bit DX10: an untested beta route)</td></tr>
     <tr><td>Game Pass / Microsoft Store installs</td><td class="no">✘ locked folders, can't be modded this way</td></tr>
   </table>
   <p class="hint" style="margin-top:14px"><b>"Works" and "worth it" are different questions.</b> Plenty of games install cleanly and then look
@@ -147,7 +151,9 @@
        <a href="https://github.com/ThunderRuler/dlss5-installer-skill/blob/main/references/troubleshooting.md">troubleshooting reference</a></p>
     <p>Orchestrates work by <a href="https://github.com/clshortfuse/renodx">RenoDX</a>,
        <a href="https://github.com/jlrouzies-fr/DLSS5-Feeder">DLSS5-Feeder</a>,
-       <a href="https://github.com/NIGos/dlss5-dx11-bridge">dlss5-dx11-bridge</a>,
+       <a href="https://github.com/NIGos/dlss5-bridge">dlss5-bridge</a>,
+       <a href="https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass">OptiScaler DLSS-NR</a>,
+       <a href="https://github.com/umar-afzaal/LumeniteFX">LumeniteFX</a>,
        <a href="https://github.com/martymcmodding/iMMERSE">iMMERSE</a>,
        <a href="https://reshade.me">ReShade</a> and <a href="https://github.com/RankFTW/RHI">RHI</a>. All credit to those authors.</p>
     <p>Not affiliated with NVIDIA. No NVIDIA binaries are hosted here. Mod at your own risk.</p>

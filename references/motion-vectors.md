@@ -16,9 +16,9 @@ Fixed **at compile time** by the `DLSS5_MV_PROVIDER` preprocessor definition
 | Value | Provider | Enable this technique | Notes |
 |---|---|---|---|
 | `0` *(default)* | anything writing shared **`texMotionVectors`** — qUINT, `dh_uber_motion` | that shader's own | The old convention. **DRME does not compile on ReShade 6.8.** |
-| `1` | **iMMERSE Launchpad** | `Launchpad` | Full resolution, image-space. Warping around flames/transparents is worst here. |
+| `1` | **iMMERSE Launchpad** | `Launchpad` | Full resolution, image-space. Warping around flames/transparents is worst here. **Optional** — the Feeder no longer requires LaunchPad; older guides listing it as a hard dependency are out of date. |
 | `2` | **VORT** | `vort_Motion` | MIT. |
-| **`3`** | **LumeniteFX Kernel** ← **author's recommendation** | `Lumenite_Kernel` | 1/8-res flow **plus a confidence map** the feed uses. The config the beta was tuned on. |
+| **`3`** | **LumeniteFX Kernel** ← **recommended** (and what the Feeder installer sets up) | `LUMENITE: Kernel 2.0` (display name; the log resolves it as `Lumenite_Kernel`) | 1/8-res flow **plus a confidence map** the feed uses. Works without compute shaders, so it is also the pick for 32-bit D3D10. |
 | `4` | LumeniteFX QuantMotion | `LUMENITE: QuantMotion` | Same shape, different estimator. |
 
 Rules that apply to all of them:
@@ -31,8 +31,12 @@ Rules that apply to all of them:
 
 **LumeniteFX** (https://github.com/umar-afzaal/LumeniteFX) — note the default branch is
 `mainline`, not `main`; raw URLs against `main` silently return a 14-byte error page.
-Kernel needs `Shaders/lumenite_Kernel.fx`, the four `Shaders/include/lumenite_*.fxh`
-headers, and `Textures/lumenite_bluenoise256.png`.
+Install: copy `Shaders\lumenite_*.fx` and the `Shaders\include\` folder into
+`reshade-shaders\Shaders\`, and `Textures\lumenite_bluenoise256.png` into
+`reshade-shaders\Textures\`.
+
+**DRME** (provider `0` convention) has never compiled on ReShade 6.8 — anyone still on it
+should move to `3`.
 
 ## Reading the diagnostics
 
@@ -67,6 +71,7 @@ rather than guessing.
 | `MASK_STRENGTH`, `GEOM_MASK_REJECTED` | Writes `DLSS5_Mask`, telling DLSS to **favour the current frame** where the vector was rejected. Aimed at ghosting on rotating/occluded objects. |
 | `VALIDATE_LUMA` | Luma test used to reject bad vectors (mask only). |
 | `MV_SCALE`, `MV_SIGN` | Diagnostic multipliers. Flip `MV_SIGN` if the image doubles or smears *with* motion. |
+| `hold_strength` / `hold_tolerance` (cfg, v1.17) | **Experimental output stabiliser.** Fixes the model "re-deciding" still regions after the camera stops (a slope darkening over several frames) — not a history problem. `hold_strength` 0 = off, 1 = still regions fully held. `hold_tolerance` (default 0.04 = 4%): raise if held regions unlock by themselves, lower if slow animation lags. |
 
 ## Where this approach runs out
 

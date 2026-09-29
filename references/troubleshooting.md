@@ -6,7 +6,8 @@
 
 | Code | Meaning | Fix |
 |---|---|---|
-| `0xBAD00002` | `feature 18 create failed` — `nvngx_dlssnr.dll` signature is **HashMismatch** (file modified after NVIDIA signed it) | Replace with an Authenticode-**Valid** 310.8.0 copy. See below. |
+| `0xbad00001` | `feature 18 create failed` on an **RTX 20/30/40** — the signed 310.8.0 (and the Lecram build) only create the neural feature on RTX 50. DLSS itself still runs, so everything else looks fine. | Use the pinned **SF-v2** cross-generation runtime (`E67DEE20…`, see `known-hashes.md`). |
+| `0xBAD00002` | (a) `feature 18 create failed` — `nvngx_dlssnr.dll` is an **unrecognised modified** build (HashMismatch and not a pinned hash). (b) Feeder 1.18+: `SuperSampling.FeatureInitResult` `0xBAD00002 (PlatformError)` — NGX cannot run **in the game's process** (e.g. emulators); the Feeder's 64-bit helper mode (`dlss5-feed-helper.addon64`) is the route | Replace with a pinned copy for this GPU. See below. |
 | `0xBAD00005` | Either (a) DLSS output carries a **mip chain** the add-on needs single-mip, or (b) the runtime **rejected the low-resolution colour contract** when NR upscaling was attempted | (a) update NR add-on to ≥ v3.3.5, which handles mipped outputs; (b) leave `NREnableUpscaling=0` — upscaling is blocked on some runtime builds |
 | `DLSS output format 9 is not a supported typed codec format` | Game allocates its DLSS output as `R16G16B16A16_TYPELESS`; the add-on needs a **typed** resource | Per-game typeless→typed upgrade addon, à la `dltb-dlss5-fix` |
 
@@ -33,13 +34,20 @@ game root while ReShade loaded from `bin\` will never be found.
 
 Ranked by likelihood:
 
-1. **Signature HashMismatch on `nvngx_dlssnr.dll`** — check it:
+1. **Wrong or unrecognised runtime** — hash it and compare with `known-hashes.md`:
    ```powershell
-   Get-AuthenticodeSignature "...\nvngx_dlssnr.dll" | Select-Object Status
+   Get-FileHash "...\nvngx_dlssnr.dll" -Algorithm SHA256
    ```
-   If `HashMismatch`, replace it with a Valid copy. RHI caches one at
-   `%LOCALAPPDATA%\RHI\DLSS-NR\310.8.0\nvngx_dlssnr.dll`. Or use `dlssnr-signature-repair`,
-   which pulls a verified copy from another game you own.
+   Not pinned → replace it with the pinned build for this GPU. RHI caches copies under
+   `%LOCALAPPDATA%\RHI\DLSS-NR\<version>\` (hash those too). On RTX 50,
+   `dlssnr-signature-repair` can pull a Valid copy from another game you own — **do not**
+   point it at the SF-v2 build on a 20/30/40 card; that one is modified on purpose.
+
+1b. **Old consumer on a new driver.** Driver **616.64+** with `renodx-dlss5` **v4.6 or
+   v4.7** (the "lazy-adoption" builds) faults inside `nvngx_dlssnr.dll` (Feeder issue #54):
+   the evaluate crashes or returns nothing. Classic v4.55 passes; v5.x is untested. Check the addon version (RHI: `%LOCALAPPDATA%\RHI\rdx5\version.txt`;
+   the load banner in `ReShade.log`). Upgrade to v6.1+ — this silently breaks installs that
+   worked in August as soon as the user takes a Game Ready driver.
 
    *Back up first, and note that a `.original` backup may be equally corrupt — check its
    hash too rather than assuming it is clean.*
@@ -49,7 +57,12 @@ Ranked by likelihood:
 
 3. **Typeless output format** — needs a per-game fix.
 
-4. **RTX 40-series or older.** No confirmed success below RTX 50. Not fixable.
+4. **RTX 20/30/40 with the RTX-50-only runtime** — look for `0xbad00001` in `ReShade.log`
+   (or `host64\ReShade.log`). Fix: the pinned SF-v2 runtime.
+
+5. **Two consumers installed** (e.g. RenoDX addon + OptiScaler DLSS-NR, or + Deep Fried
+   Chicken). One goes silently inert (Chicken reports `DISARMED` / `CONFLICT`). Keep
+   exactly one.
 
 ### Effect covers only part of the screen (e.g. the top ~58%)
 
@@ -84,7 +97,8 @@ Use the "DLSS 5 Feed – debug view" technique to inspect: static areas grey, mo
 ### Feeder logs "DLSS5_Feed.fx is not loaded (technique/textures missing)"
 
 Either the shader isn't installed, or the technique order is wrong. `DLSS5_Feed` must be
-enabled **below** `MartysMods_Launchpad`. Also confirm Generic Depth is enabled with the
+enabled **below** the motion-vector provider (`LUMENITE: Kernel 2.0` for provider 3,
+`MartysMods_Launchpad` for provider 1). Also confirm Generic Depth is enabled with the
 right depth buffer picked.
 
 If the game already has native DLSS, you don't need the Feeder at all — this warning is
@@ -108,7 +122,8 @@ fullscreen swapchain churn causing repeated effect reloads.
 
 - `custom runtime accepted; untested build, NR failures may be specific to it` — the
   `nvngx_dlssnr.dll` is not a clean signed NVIDIA build. Suspect it first for any weird
-  output, and check its Authenticode status.
+  output, and hash it against `known-hashes.md` (the SF-v2 build fails Authenticode by
+  design, so the signature alone tells you nothing).
 - `NR upscaling fell back to native: the signed runtime rejected the low-resolution colour
   contract ... Upscaling cannot engage with this runtime build` — keep
   `NREnableUpscaling=0`. Not a bug you can fix from config.
@@ -337,3 +352,100 @@ for games with no DLSS of their own.
 `NRUICorrection` and `NRAutoMask` in the `renodx-dlss5` panel are **both off by default**.
 Turn them on in the overlay (not by editing `reshade.ini` mid-session — ReShade rewrites it
 on shutdown). See `motion-vectors.md` for the `UIMask.fx` fallback.
+
+## ReShade silently reverts `ReShade.ini` edits made while the game is running
+
+**Symptom:** you change a setting in `ReShade.ini` — most painfully
+`PreprocessorDefinitions=DLSS5_MV_PROVIDER=N` — relaunch, and nothing changed. The new
+provider's shader never appears in `ReShade.log` at all.
+
+**Cause:** ReShade holds its own in-memory copy of `ReShade.ini` and **writes it back out
+on exit**. Any edit you make to that file while the game is running is silently
+overwritten by the stale in-memory version when the process closes. Your change is gone
+before the next launch reads the file.
+
+**Confirm it in two seconds** — compare mtimes after closing the game:
+
+```bash
+stat -c '%y  %n' "<gamedir>/ReShade.ini" "<gamedir>/dlss5-feed.log"
+```
+
+If `ReShade.ini`'s timestamp matches the moment the game *exited* rather than the moment
+you edited it, ReShade rewrote it and your change is lost.
+
+**Rule: only edit `ReShade.ini` with the game fully closed.** Verify the value after
+closing, not after editing.
+
+Note the asymmetry that makes this confusing: `ReShadePreset.ini` is **not** rewritten on
+exit unless something changed it in the overlay. So a provider set in both files ends up
+**mismatched** — preset says 3, global says 1 — which looks like the
+preset-overrides-global problem and sends you debugging the wrong file.
+
+Two related traps in the same family:
+
+- A uniform changed in the overlay (`MV_SIGN`, `MV_SCALE`) is saved to the *preset*, not
+  to `ReShade.ini`. If it did not persist, it was never committed — ReShade only writes
+  the preset when a value actually changes.
+- `DLSS5_MV_PROVIDER` is a **preprocessor define**, so it needs a full effect recompile.
+  Changing it cannot take effect live; the game has to be restarted.
+
+# Added 2026-09-29 (September ecosystem changes)
+
+### The old bridge keeps loading after an upgrade
+
+The bridge was renamed `dlss5-dx11-bridge` → `dlss5-bridge`. ReShade loads **both** addon
+files if both are present, and the old one wins. Delete `dlss5-dx11-bridge.addon64` (and,
+once `dlss5-bridge.cfg` exists, the old `.cfg`). The top of `dlss5-bridge.log` lists the
+SHA-256 of every addon loaded — two bridge entries means this.
+
+### Feeder on a D3D12 game does nothing and says the game has its own DLSS
+
+Since v1.17.0-beta.2 the D3D12 same-device path refuses when the game has loaded
+`nvngx_dlss.dll`, `nvngx_dlssd.dll` or `sl.dlss.dll`. That is deliberate: the game has
+engine motion vectors, so it belongs on **Scenario A** (consumer alone) or **E**
+(OptiScaler). `native_dlss_ok=1` overrides, but only do that with a reason.
+
+### 32-bit: `the host in host64\ speaks protocol vX, this add-on vY`
+
+`dlss5-feed.addon32` and `host64\dlss5-feed-host64.exe` came from different releases.
+Replace both from the same zip. Related: a `dlss5-feed.addon64` placed **inside** `host64\`
+is refused — the helper only takes the consumer.
+
+### Agility SDK: `0x887E0003`
+
+A game shipping its own `D3D12\` Agility SDK folder can conflict with the private D3D12
+device. Test by renaming the game's `D3D12` folder to `D3D12_off`; revert if it changes
+nothing.
+
+### Vulkan: black screen, freezes or lost frames with NVIDIA Smooth Motion
+
+Smooth Motion must be **off for Vulkan** games under the Feeder (NVIDIA Profile Inspector:
+setting `0xB0CC0875` is a sum — 1 = DX12, 2 = DX11, 4 = Vulkan — so remove the 4, e.g.
+`7` → `3`). It is compatible with D3D11/12 since Feeder
+0.11.0-beta.2. Luma mods and `NRStyle=2` have also crashed under Smooth Motion.
+
+### `### CRASH RECORDED ###` in `dlss5-feed.log`
+
+The Feeder wrote `dlss5-feed-crash.dmp` next to the exe. Attach it to a report; don't retry
+blindly.
+
+### Stutter with Deep Fried Chicken as the consumer
+
+Chicken ≤ 1.4.7 stutters; set `stall_log_ms` low to confirm stalls in the log, and update
+Chicken or switch consumer.
+
+### The bridge's substitute path (`synth=1`) looks soft and smeary
+
+Expected — the bridge README says so. For games without DLSS use the Feeder instead.
+
+## Scam and lookalike downloads (tell the user once, early)
+
+- **`dlss5bridge.com` is not the bridge project.** Its installer has been flagged malicious
+  (it tries to add Microsoft Defender exclusions). The real bridge has no installer.
+- **Fake DLSS5-Feeder sites and copycat repos** distribute lookalike ZIPs and "installer
+  .exe" files. The Feeder ships no `.exe`; the only real source is its GitHub Releases page.
+- Lookalike repos with 0–1 stars copying popular names (Feeder, Swapper, "one-click",
+  "NBA 2K27 free") have been seen. Check the owner matches `components.md` exactly.
+- Any tool that asks to **add a Defender exclusion** is a red flag. (The Feeder installer
+  asks before excluding Deep Fried Chicken, which Defender often quarantines — the skill
+  doesn't install Chicken, so decline.)

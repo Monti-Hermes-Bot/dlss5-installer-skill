@@ -3,6 +3,12 @@
 Seeded from the author's test machine (RTX 5070 Ti, driver 616.56). The detailed
 write-ups below are deep-dive cases; the table is where community results go.
 
+> **Read the dated entries as history.** The deep-dive cases were run in late August 2026
+> on Feeder 0.2–0.6, RenoDX DLSS5 v4.1.5, iMMERSE LaunchPad and `dlss5-dx11-bridge`. The
+> *diagnoses* still hold; the *versions and layouts* do not — use `install-playbook.md`
+> for current ones. In particular: the v4.6/v4.7 addons no longer work on driver 616.64+ (use v6.1+), and
+> LaunchPad is no longer required.
+
 ## Which games actually benefit
 
 The strongest pattern in this log is not about API, engine, or scenario. It is about
@@ -270,17 +276,32 @@ APIs below are from RHI's `game_api_cache.json`. Re-verify before starting.
 
 ## Confirmed-working lists from the tool authors
 
-**dlss5-dx11-bridge** — Baldur's Gate 3 (Divinity 4.0), Final Fantasy XIV Online,
-The Legend of Heroes: Trails beyond the Horizon, Tainted Grail: Fall of Avalon (Unity),
-7 Days to Die (Unity), Skyrim Special Edition (DLSS injector mod), Fallout 4 (DLSS injector
-mod), S.T.A.L.K.E.R. Anomaly (SSS24 upscaler injector), Assetto Corsa (Custom Shaders Patch
-Preview 338+).
+*(Refreshed 2026-09-29 from each project's README. These are the authors' / their users'
+claims, not results from this skill — useful as a head start, still verify by log.)*
 
-The last four matter: they prove the bridge works off **injected** DLSS, not just native.
+**dlss5-bridge** (formerly dlss5-dx11-bridge) — author-tested: Baldur's Gate 3 (D3D11 **and**
+Vulkan), Red Dead Redemption 2 (Vulkan, needs `flags=75`), Skyrim SE. User-reported: Final
+Fantasy XIV Online, Trails beyond the Horizon, Tainted Grail: Fall of Avalon, 7 Days to Die,
+Fallout 4 (DLSS injector mod), S.T.A.L.K.E.R. Anomaly (SSS24 injector), Assetto Corsa (CSP
+Preview 338+), Arknights: Endfield (Vulkan, with DLAA + MFG 4x). BG3 split-screen: partially
+fixed in the v1.4.13 pre-releases; NR in both viewports still open.
 
-**DLSS5-Feeder** — Metro 2033 Redux (D3D11 64-bit), The Lord of the Rings: War in the North
-Legacy Edition (D3D12 64-bit, no native DLSS), Splinter Cell: Blacklist (D3D11 32-bit,
-beta), BioShock Remastered (D3D11 32-bit, beta — D3D9 wrapped to D3D11).
+The injector entries matter: they prove the bridge works off **injected** DLSS, not just native.
+
+**DLSS5-Feeder** (v1.17.0) — Metro 2033 Redux (64-bit D3D11), Subnautica (64-bit D3D11), LOTR:
+War in the North Legacy Edition (64-bit D3D12, same-device, 120 fps), Splinter Cell:
+Blacklist (32-bit D3D11), BioShock Remastered (32-bit, self-wrapped D3D9→D3D11), Fable
+Anniversary (32-bit D3D9 via dgVoodoo2), DOOM 2016 (64-bit Vulkan), Worms Ultimate Mayhem
+(32-bit OpenGL). User-reported: Guild Wars Reforged (32-bit Vulkan via DXVK, **RTX 4070**),
+World of Warcraft 3.3.5a (32-bit Vulkan via DXVK), Star Wars: KOTOR (32-bit OpenGL, **RTX
+2060**), MX Bikes (64-bit OpenGL), Darksiders II (64-bit D3D9 via DXVK). The 4070/2060
+reports predate the finding that stock runtimes fail on pre-RTX-50 cards, so those users
+presumably had a modified runtime. Known bad: Detroit: Become Human demo (Vulkan) — stale
+frames, almost certainly NVIDIA Smooth Motion.
+
+**OptiScaler DLSS-NR fork** — validated setups in its install guide: Baldur's Gate 3
+(`bg3.exe` D3D12 / `bg3_dx11.exe` via `Dx11Upscaler=dlss_12`), Hogwarts Legacy (`dxgi.dll`
+proxy), Cyberpunk 2077 (`dbghelp.dll` proxy; avoid `d3d12.dll` or RR greys out).
 
 **dlss5-d3d12-fix** — Resonance: A Plague Tale Legacy (sole tested title).
 

@@ -3,9 +3,16 @@
 Two facts decide everything: **the game's graphics API** and **whether it already has DLSS**.
 Establish both before touching a single file. Getting this wrong is how you lose an evening.
 
-> **Updated 2026-08-30.** DLSS5-Feeder v0.5.1+ added **working Vulkan support**, and a
-> **D3D9 path via dgVoodoo2**. Earlier versions of this document (and the Feeder's own older
-> README) said both were impossible. They are not. **D3D10 is now the only hard dead end.**
+> **Updated 2026-09-29.** As of Feeder v1.17.0 there is **no API-level dead end left** for
+> the common cases: Vulkan (v0.5.1), OpenGL (v0.7), 32-bit D3D10 (v0.13.1) and D3D9 via
+> dgVoodoo2/DXVK all have paths. The remaining hard stops are **64-bit D3D10** (Feeder
+> 1.18.0-beta.1's helper mode is an untested route — e.g. Crysis, #134), **32-bit D3D12**,
+> and non-NVIDIA GPUs. Older notes calling Vulkan/OpenGL/D3D9/D3D10 impossible are
+> historical.
+>
+> **Step 0: does the game have official DLSS 5?** NBA 2K27 and the fall-2026 list (see
+> `components.md`) have an in-game "DLSS Neural Rendering" toggle on RTX 50. Use that and
+> stop here.
 
 ## Step 1 — determine the API and bitness
 
@@ -60,25 +67,36 @@ Subnautica and BeamNG.drive both look like DLSS games by file listing alone. Nei
 
 ## Step 3 — read off the stack
 
-| API | Bits | Has DLSS | Stack |
-|---|---|---|---|
-| D3D12 | 64 | yes | `renodx-dlss5.addon64` only |
-| D3D12 | 64 | no | `renodx-dlss5` + **DLSS5-Feeder** |
-| D3D11 | 64 | yes | `renodx-dlss5` + **dlss5-dx11-bridge** |
-| D3D11 | 64 | no | `renodx-dlss5` + **DLSS5-Feeder** |
-| **Vulkan** | 64 | either | `renodx-dlss5` + **DLSS5-Feeder** — see below, ReShade installs as a *layer* |
-| D3D11 | 32 | either | **DLSS5-Feeder 32-bit path** (`.addon32` + `host64\`) |
-| **D3D9** | either | — | **dgVoodoo2 → D3D11**, then treat as a normal install |
-| D3D9 wrapped→D3D11 already | either | — | treat as D3D11 (e.g. BioShock Remastered) |
-| D3D12 | 32 | — | ✗ no D3D12 in the 32-bit runtime |
-| **D3D10** | — | — | ✗ **the only remaining hard dead end** |
+"Consumer" below means one neural consumer — `renodx-dlss5.addon64` by default (see
+`components.md`).
 
-Never run the Feeder and the DX11 bridge on the same game.
+| API | Bits | Has DLSS | Scenario | Stack |
+|---|---|---|---|---|
+| D3D12 | 64 | yes | **A** | consumer only |
+| D3D12 | 64 | yes | **E** (alt.) | **OptiScaler DLSS-NR fork** instead of ReShade + consumer — best when cost matters (NR before upscaling) |
+| D3D11 | 64 | yes | **B** | consumer + **dlss5-bridge** |
+| **Vulkan** | 64 | yes | **B** | consumer + **dlss5-bridge** (Vulkan mirror), ReShade as a *layer* |
+| D3D12 / D3D11 / Vulkan | 64 | no | **C** | consumer + **DLSS5-Feeder** |
+| **OpenGL** | 32/64 | no | **C/D** | consumer + **DLSS5-Feeder** (game must run on the NVIDIA GPU) |
+| D3D11 / OpenGL / Vulkan | 32 | either | **D** | **Feeder 32-bit** (`.addon32` + `host64\`) |
+| **D3D10** | 32 | — | **D** | **Feeder 32-bit** — provider must work without compute shaders (LumeniteFX OK) |
+| **D3D9** / D3D8 | 32 | — | **D** | **dgVoodoo2 → D3D11**, then Feeder 32-bit |
+| **D3D9** | 64 | — | **C** | dgVoodoo2 → D3D11, **or DXVK → Vulkan** (`dxvk.allowFse = False`), then Feeder |
+| D3D9 wrapped→D3D11 already | either | — | C/D | treat as D3D11 (e.g. BioShock Remastered) |
+| D3D12 | 32 | — | ✗ | no D3D12 in the 32-bit runtime |
+| D3D10 | 64 | — | ✗ / beta | `addon64` has no D3D10 backend; Feeder 1.18.0-beta.1 `dlss5-feed-helper.addon64` supports it but is untested in a real game |
 
-### The DX11 bridge is D3D11-only — check the entry point names
+Rules:
 
-The bridge prints a confident hook report that means nothing in a D3D12 process. Read the
-**entry point names**, not the `hooked: yes` line:
+- Never run the Feeder and the bridge on the same game.
+- Never run two consumers (e.g. RenoDX addon **and** the OptiScaler fork).
+- A game with native DLSS belongs on A/B/E, not C. The Feeder's D3D12 path now refuses such
+  games on purpose (`native_dlss_ok=0`), because engine motion vectors beat reconstructed ones.
+
+### The bridge's D3D11 route: check the entry point names
+
+In a D3D12 process the bridge has nothing to do, but it still prints a confident hook
+report. Read the **entry point names**, not the `hooked: yes` line:
 
 ```
 NVSDK_NGX_D3D11_CreateFeature = 00007FFE104D5160   <- D3D11!
@@ -134,7 +152,22 @@ Key points that trip people up:
 (self-wrapping).
 
 Bitness is *not* the blocker people assume — the Feeder has a working 32-bit path with a
-`host64\` helper. **The API is the blocker, and the list of blocked APIs is now just D3D10.**
+`host64\` helper. Since v1.17.0-beta.2 the Feeder's `.fx` compiles to an explanatory stub
+on real D3D9 instead of failing with `X3531`, so that message in the overlay means "you
+forgot the wrapper".
+
+## OpenGL (v0.7+)
+
+Supported in 32- and 64-bit through `GL_EXT_memory_object_win32` /
+`GL_EXT_semaphore_win32`. ReShade installs as `opengl32.dll` (confirm the game imports it
+first). The game must be rendering on the NVIDIA GPU — on a laptop, force it in the NVIDIA
+Control Panel. Proof line: `[feed] frame N delivered (…, OpenGL transport)`.
+
+## D3D10 (v0.13.1+, 32-bit only)
+
+Native, no wrapper: `addon32` creates a private D3D11 "relay" device. The 64-bit add-on has
+no D3D10 backend. The motion-vector provider must work without compute shaders (LumeniteFX
+does), and the in-game "Show as texture" panel mode is unavailable.
 
 ## IMPORTANT correction: an installer's API cache says what a game *can* do, not what it *does*
 

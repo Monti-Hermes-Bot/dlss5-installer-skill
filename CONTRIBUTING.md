@@ -27,12 +27,15 @@ Keep to the existing table format, and include the proof line from your log.
 Two hard rules, and they're the reason this project can exist publicly at all:
 
 - **No binaries, ever.** No `.dll`, `.exe`, or `.addon64` files in the repo — above all
-  `nvngx_dlssnr.dll`, which is unreleased NVIDIA code that leaked from a game build.
+  `nvngx_dlssnr.dll`, which is NVIDIA code that was never released standalone.
   Hosting it would get the whole repo taken down.
-- **No links to runtime downloads.** No mirrors, no file hosts, no "here's where I got
-  mine". The skill deliberately only locates and hash-verifies copies already on the
-  user's own machine. Linking an upstream project's own releases page (RenoDX, ReShade,
-  the Feeder) is fine.
+- **No new links to runtime downloads.** No mirrors, no file hosts, no "here's where I got
+  mine". The one exception is maintained by the project itself: the `RankFTW/rhi-repo`
+  release tags named in `references/known-hashes.md`, each tied to a pinned SHA-256 —
+  the same source RHI and the Feeder installer already use. Proposing a new runtime build
+  means proposing its **hash** with evidence (where it came from, which GPUs, a log line
+  showing `feature 18` working), not a link. Linking an upstream project's own releases
+  page (RenoDX, ReShade, the Feeder, the bridge, OptiScaler) is fine.
 
 Also declined: results from anti-cheat or multiplayer games. The skill refuses those
 because DLL injection gets people banned, and the results log shouldn't imply otherwise.

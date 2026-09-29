@@ -11,26 +11,31 @@ and let the assistant walk you through it — it covers all of the below on its 
 
 | | |
 |---|---|
-| **An NVIDIA RTX GPU** | 50-series is the documented config. See the note below for 40/30. |
+| **An NVIDIA RTX GPU** | 50-series is the documented config. 20/30/40 work with a different runtime build — see below. |
 | **A current NVIDIA driver** | You install this yourself. Nothing here can do it for you. |
 | **A game without anti-cheat** | Non-negotiable. Injecting DLLs is what anti-cheat bans people for. |
 | **Disk space** | About 250 MB per game — the neural runtime alone is ~165 MB and it's per-folder. |
 | **An assistant with file access** | Claude Code, Claude Desktop with file access, or equivalent. A chat window with no access to your PC cannot do this. |
 
-**On 40- and 30-series:** people report getting this working, but there is **no documented
-result here** — the entire log was built on a 5070 Ti. The skill will warn you and then
-continue if you want it to. If it works on yours, that report is the single most valuable
-thing you could contribute, because it would be the first.
+**On 20-, 30- and 40-series:** NVIDIA's own runtime only runs the neural model on RTX 50
+(older cards fail with `0xbad00001`). A community-modified build (ShortFuse "SF-v2") makes
+20/30/40 work; your assistant only accepts it by its exact fingerprint (SHA-256). Expect a
+big performance cost — around 40% on a 4090, and RTX 20/30 are often at 20–40 fps. The
+entire log here was built on a 5070 Ti, so your result is especially valuable.
+
+**Is your game officially supported?** NVIDIA released DLSS 5 on 3 September 2026 (driver
+616.64, RTX 50). If your game has a "DLSS Neural Rendering" option in its settings, use
+that instead — no modding needed.
 
 ## Step 0 — the shortcut nobody tells you about
 
 On a machine with nothing installed, **install [RHI](https://github.com/RankFTW/RHI/releases)
 first.** Its DLSS 5 button deploys three of the four components in one step, including a
-hash-verified copy of the neural runtime.
+copy of the neural runtime (your assistant still checks its fingerprint).
 
-Doing it piecemeal instead means hunting the RenoDX Discord and Nexus for a file that
-isn't on any release page, and sourcing a leaked NVIDIA DLL yourself — which is where
-people pick up the corrupt copy. **Start with RHI.** Your assistant will suggest this
+Doing it piecemeal instead means hunting Discord, Nexus and release repos for the right
+version of each file, and sourcing the NVIDIA runtime yourself — which is where people
+pick up the corrupt copy. **Start with RHI.** Your assistant will suggest this
 anyway; it's here so you're not surprised by it.
 
 ## Step 1 — components
@@ -40,19 +45,22 @@ Your assistant checks for four things and tells you which are missing:
 1. **ReShade 6.8+, Addon build** — you download and run the installer (`_Addon.exe`). The
    *standard* build silently cannot load addons, and picking the wrong one is the most
    common first-run mistake.
-2. **`renodx-dlss5.addon64`** — RHI provides it. Otherwise: RenoDX Discord or
-   [Nexus](https://www.nexusmods.com/site/mods/2224). Not on any GitHub release page.
-3. **`nvngx_dlssnr.dll` v310.8.0** — the neural runtime. **This repo never distributes it
-   and neither should anyone else.** Your assistant finds a copy already on your machine
-   and verifies it cryptographically before use.
+2. **`renodx-dlss5.addon64`, v6.1 or newer** — RHI provides it; its versioned builds are
+   published on [RHI's release repo](https://github.com/RankFTW/rhi-repo/releases), and it
+   also circulates on the RenoDX Discord and [Nexus](https://www.nexusmods.com/site/mods/2224).
+   Some older copies (v4.6/v4.7) stop working on any NVIDIA driver from 616.64 onward.
+3. **`nvngx_dlssnr.dll` (310.8)** — the neural runtime. **This repo never distributes
+   it.** Your assistant looks for a copy already on your machine, or — after asking you —
+   fetches the specific build for your GPU from the same place RHI gets it, and in both
+   cases checks its SHA-256 fingerprint against a short pinned list before use.
 4. **`nvngx_dlss.dll`** — standard DLSS. Many games already ship it.
 
 **About that third one.** It is unreleased NVIDIA code that leaked from a game build.
 Copies circulating in the wild are frequently corrupt or tampered with, and a bad one
 fails in a way that looks exactly like a GPU problem — you'll get `STANDBY` or `FAILED`
-and conclude your card isn't supported. Your assistant checks the Authenticode signature
-and the SHA256 against known-good and known-bad values before touching anything. If it
-can't find a valid copy it will tell you so rather than proceeding.
+and conclude your card isn't supported. Your assistant checks the SHA-256 against the pinned
+known-good values for your GPU before touching anything. An unknown fingerprint means it
+stops and tells you, rather than proceeding.
 
 **Nothing is downloaded behind your back.** Anything fetched from the internet is named
 and shown to you first.
@@ -104,7 +112,7 @@ is worth reading. That includes the unglamorous results:
 - **"Installed fine, looked identical"** is the most useful and least reported outcome
   there is. Nobody files these, so everyone keeps rediscovering the same dead ends.
 - **A failure with a known cause** saves the next person an entire evening.
-- **A 40- or 30-series result** would be the first documented one either way.
+- **An RTX 20/30/40 result** would be the first documented one here either way.
 
 If you'd rather not, say so once and it won't ask again.
 
